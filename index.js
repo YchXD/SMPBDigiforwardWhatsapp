@@ -56,10 +56,9 @@ async function startWA() {
 
   // if new login, use OTP (pairing code)
   if (!client.authState.creds.registered) {
-    //const phoneNumber = await question(
-    //  "/> please enter your WhatsApp number, starting with 62:\n> number: "
-    //);
-    const phoneNumber = 6285183103656;
+    const phoneNumber = await question(
+      "/> please enter your WhatsApp number, starting with 62:\n> number: "
+    );
     try {
       const code = await client.requestPairingCode(phoneNumber, "WOIIANJG");
       console.log(`✅ Your pairing code: ${code}`);
@@ -124,4 +123,5 @@ app.listen(PORT, () =>
   console.log(`🚀 WhatsApp OTP service running on port ${PORT}`)
 );
 startWA();
+
 
