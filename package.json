@@ -1,0 +1,24 @@
+{
+  "name": "y",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@protobufjs/aspromise": "^1.1.2",
+    "@whiskeysockets/baileys": "github:kiuur/bails",
+    "baileys": "github:kiuur/bails",
+    "crypto": "^1.0.1",
+    "express": "^5.1.0",
+    "futoin-hkdf": "^1.5.3",
+    "node-cache": "^5.1.2",
+    "protobufjs": "^7.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "uuid": "^13.0.0"
+  }
+}
