@@ -6,7 +6,7 @@ const {
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
   makeInMemoryStore,
-} = require("baileys");
+} = require("@yumenative/baileys");
 
 const app = express();
 const PORT = 4000;
@@ -42,30 +42,23 @@ async function startWA() {
   });
 
   const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
-  const { version } = await fetchLatestBaileysVersion();
 
   const client = makeWASocket({
     logger: pino({ level: "silent" }),
     printQRInTerminal: false,
     auth: state,
-    browser: ["Ubuntu", "Chrome", "20.0.00"],
   });
 
   store.bind(client.ev);
   client.ev.on("creds.update", saveCreds);
 
-  // if new login, use OTP (pairing code)
   if (!client.authState.creds.registered) {
     const phoneNumber = await question(
       "/> please enter your WhatsApp number, starting with 62:\n> number: "
     );
-    try {
-      const code = await client.requestPairingCode(phoneNumber, "WOIIANJG");
+      await new Promise((r) => setTimeout(r,2000));
+      const code = await client.requestPairingCode(phoneNumber, "SPMBDIGI");
       console.log(`✅ Your pairing code: ${code}`);
-      console.log("Enter this on WhatsApp → Linked Devices → Use phone number instead");
-    } catch (err) {
-      console.error("❌ Failed to request OTP:", err.message);
-    }
   }
 
   client.ev.on("connection.update", async (update) => {
@@ -123,5 +116,3 @@ app.listen(PORT, () =>
   console.log(`🚀 WhatsApp OTP service running on port ${PORT}`)
 );
 startWA();
-
-

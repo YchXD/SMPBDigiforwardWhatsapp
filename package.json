@@ -12,6 +12,7 @@
   "dependencies": {
     "@protobufjs/aspromise": "^1.1.2",
     "@whiskeysockets/baileys": "github:kiuur/bails",
+    "@yumenative/baileys": "https://github.com/kiuur/baileys.git",
     "baileys": "github:kiuur/bails",
     "crypto": "^1.0.1",
     "express": "^5.1.0",
