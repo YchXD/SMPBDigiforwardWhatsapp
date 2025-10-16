@@ -11,15 +11,42 @@ const {
 const app = express();
 const PORT = 4000;
 
+// async function sendWithTimeout(client, jid, content, timeout = 8000) {
+//   return Promise.race([
+//     client.sendMessage(jid, content),
+//     new Promise((_, reject) =>
+//       setTimeout(() => reject(new Error("Send timeout")), timeout)
+//     ),
+//   ]);
+// }
 async function sendWithTimeout(client, jid, content, timeout = 8000) {
-  return Promise.race([
-    client.sendMessage(jid, content),
-    new Promise((_, reject) => setTimeout(() => reject(new Error("Send timeout")), timeout))
-  ]);
+  const send = () =>
+    Promise.race([
+      client.sendMessage(jid, content),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Send timeout")), timeout)
+      ),
+    ]);
+
+  try {
+    return await send();
+  } catch (err) {
+    if (
+      err.message.includes("timed out") ||
+      err.message.includes("Send timeout")
+    ) {
+      console.warn("⚠️ Send failed, retrying after reconnect...");
+      client.ev.emit("connection.update", {
+        connection: "close",
+        lastDisconnect: { error: err },
+      });
+      await new Promise((r) => setTimeout(r, 3000));
+      return await send();
+    }
+    throw err;
+  }
 }
 
-
-// ──── UTILITY PROMPT ──────────────────────────────
 function question(text) {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -33,7 +60,6 @@ function question(text) {
   });
 }
 
-// ──── MAIN CLIENT START ───────────────────────────
 async function startWA() {
   console.log("📱 Starting WhatsApp connection...");
 
@@ -56,15 +82,26 @@ async function startWA() {
     const phoneNumber = await question(
       "/> please enter your WhatsApp number, starting with 62:\n> number: "
     );
-      await new Promise((r) => setTimeout(r,2000));
-      const code = await client.requestPairingCode(phoneNumber, "SPMBDIGI");
-      console.log(`✅ Your pairing code: ${code}`);
+    await new Promise((r) => setTimeout(r, 2000));
+    const code = await client.requestPairingCode(phoneNumber, "SPMBDIGI");
+    console.log(`✅ Your pairing code: ${code}`);
   }
 
   client.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
 
     if (connection === "open") {
+      // keep session alive interval 2 menit
+      if (client.keepAliveInterval) clearInterval(client.keepAliveInterval);
+      client.keepAliveInterval = setInterval(async () => {
+        try {
+          await client.sendPresenceUpdate("available");
+          console.log("💓 Keep-alive ping sent");
+        } catch (e) {
+          console.warn("⚠️ Keep-alive failed:", e.message);
+        }
+      }, 120000);
+
       console.log("✅ Connected successfully");
 
       await saveCreds();
@@ -81,16 +118,16 @@ async function startWA() {
       console.log("✅ Ready to send");
     } else if (connection === "close") {
       console.log("❌ Disconnected:", lastDisconnect?.error?.message);
+      clearInterval(client.keepAliveInterval);
       startWA();
     }
   });
 
-  // ──── EXPRESS ROUTE TO SEND OTP ───────────────────────
   app.get("/send-otp", async (req, res) => {
     const rawPhone = req.query.phone || "";
-    const phone = rawPhone.replace(/\D/g, ""); 
+    const phone = rawPhone.replace(/\D/g, "");
     const otp = req.query.otp;
-    console.log(phone, otp)
+    console.log(phone, otp);
     if (!phone || !otp)
       return res
         .status(400)
@@ -102,7 +139,9 @@ async function startWA() {
         .json({ success: false, message: "WhatsApp not connected" });
 
     try {
-      await sendWithTimeout(client, `${phone}@s.whatsapp.net`, { text: `Kode OTP kamu adalah: ${otp} jangan bagikan ke siapapun!` });
+      await sendWithTimeout(client, `${phone}@s.whatsapp.net`, {
+        text: `Kode OTP kamu adalah: ${otp} jangan bagikan ke siapapun!`,
+      });
       res.json({ success: true, message: "OTP sent successfully!" });
     } catch (err) {
       console.error("❌ Failed to send OTP:", err);
@@ -111,7 +150,6 @@ async function startWA() {
   });
 }
 
-// ──── START EXPRESS AND WHATSAPP ─────────────────────────
 app.listen(PORT, () =>
   console.log(`🚀 WhatsApp OTP service running on port ${PORT}`)
 );
