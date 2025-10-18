@@ -10,13 +10,9 @@ const {
 } = require("@yumenative/baileys");
 const axios = require("axios");
 const http = require("http");
-const { Server } = require("socket.io");
 const app = express();
 app.use(express.json());
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" },
-});
 const PORT = 4000;
 const WEBHOOK_URL = process.env.WEBHOOK_URL || "http://localhost:3000/api/socket/webhook";
 
