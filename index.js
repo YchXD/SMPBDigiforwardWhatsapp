@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 const server = http.createServer(app);
 const PORT = 4000;
-const WEBHOOK_URL = process.env.WEBHOOK_URL || "http://localhost:3000/api/socket/webhook";
+let WEBHOOK_URL = process.env.WEBHOOK_URL || "http://localhost:3000/api/socket/webhook";
 
 
 async function sendWithTimeout(client, jid, content, timeout = 8000) {
@@ -155,6 +155,7 @@ async function startWA() {
     console.log("   Message:", type === "sticker" ? "[sticker]" : message);
     if (quoted) console.log("   ↪️ Quoted:", quoted);
     console.log("   Timestamp:", timestamp);
+    console.log("   webhook:", WEBHOOK_URL);
 
     try {
       await axios.post(WEBHOOK_URL, {
