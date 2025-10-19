@@ -14,8 +14,7 @@ const app = express();
 app.use(express.json());
 const server = http.createServer(app);
 const PORT = 4000;
-let WEBHOOK_URL = process.env.WEBHOOK_URL || "http://localhost:3000/api/socket/webhook";
-
+let WEBHOOK_URL = "https://admin.digiforward.dpdns.org/api/socket/webhook" || "http://localhost:3000/api/socket/webhook";
 
 async function sendWithTimeout(client, jid, content, timeout = 8000) {
   const send = () =>
