@@ -86,7 +86,7 @@ async function startWA() {
 
     const from = msg.key.remoteJid;
 
-    if (from === "status@broadcast" || from.endsWith("@newsletter")) {
+    if (from === "status@broadcast" || from.endsWith("@newsletter") || from.endsWith("@g.us")) {
       console.log("⏭️ Skipped status/newsletter message:", from);
       return;
     }
